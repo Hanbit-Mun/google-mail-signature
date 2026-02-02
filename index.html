@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gmail 서명 생성기 (office)</title>
+  <style>
+    :root { --bg:#f5f5f5; --card:#ffffff; --line:#e5e7eb; --text:#111827; --muted:#6b7280; --accent:#2563eb; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+           background: var(--bg); color: var(--text); }
+    header { padding: 20px 24px; border-bottom:1px solid var(--line); }
+    header h1 { margin:0; font-size:18px; font-weight:700; }
+    header p { margin:6px 0 0; color: var(--muted); font-size:13px; line-height:1.5; }
+    main { display:grid; grid-template-columns: 420px 1fr; gap:16px; padding:16px; }
+    @media (max-width: 980px){ main{ grid-template-columns: 1fr; } }
+    .card { background: var(--card); border:1px solid var(--line); border-radius:14px; box-shadow: 0 10px 24px rgba(0,0,0,0.08); overflow:hidden; }
+    .card h2 { margin:0; padding:14px 16px; font-size:14px; letter-spacing:0.2px; border-bottom:1px solid var(--line); }
+    .body { padding: 16px; }
+    label { display:block; font-size:12px; color: var(--muted); margin: 10px 0 6px; }
+    input, select { width:100%; padding:10px 10px; border-radius:10px; border:1px solid var(--line);
+                    background: #ffffff; color: var(--text); outline:none; }
+    input:focus, select:focus { border-color: rgba(122,162,255,0.8); box-shadow: 0 0 0 3px rgba(122,162,255,0.18); }
+    .row { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    .hint { font-size:12px; color: var(--muted); margin-top:10px; line-height:1.5; }
+    .btns { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    button { appearance:none; border:1px solid var(--line); background: rgba(37,99,235,0.10);
+             color: var(--text); padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:600; }
+    button:hover { background: rgba(37,99,235,0.14); }
+    button.secondary { background: #f9fafb; }
+    .previewWrap { padding:16px; display:grid; gap:12px; }
+    .previewBox { background:#ffffff; color:#111; border-radius:14px; padding:16px; border:1px solid rgba(0,0,0,0.08); }
+    .mono { background: #111827; border:1px solid #0b1220; border-radius:14px; padding:14px; overflow:auto; color: #e5e7eb; }
+    .mono pre { margin:0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+                font-size:12px; white-space:pre; }
+    details { margin-top:10px; }
+    details summary { cursor:pointer; color: var(--accent); font-size:12px; }
+    .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: 18px;
+             background: rgba(0,0,0,0.78); border:1px solid rgba(0,0,0,0.12);
+             color:#fff; padding:10px 12px; border-radius:999px; font-size:13px; opacity:0; pointer-events:none; transition: opacity .18s ease; }
+    .toast.on { opacity:1; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Gmail 공용 서명 생성기</h1>
+  <p>왼쪽에 정보를 입력하면 오른쪽에 <b>Gmail에 그대로 붙여넣을 수 있는(서식 유지)</b> 서명이 만들어집니다. <br/>
+     ※ Gmail은 'HTML 파일 업로드'가 아니라, <b>서명 편집기에 서식 있는 상태로 붙여넣기</b>가 가장 안정적입니다.</p>
+</header>
+
+<main>
+  <section class="card">
+    <h2>개인 정보 입력</h2>
+    <div class="body">
+      <label>이름</label>
+      <input id="name" placeholder="홍길동" value="홍길동"/>
+
+      <div class="row">
+        <div>
+          <label>부서</label>
+          <input id="team" placeholder="조직문화팀" value="조직문화팀"/>
+        </div>
+        <div>
+          <label>직급</label>
+          <input id="title" placeholder="사원" value="사원"/>
+        </div>
+      </div>
+
+      <label>이메일</label>
+      <input id="email" placeholder="hong@eternal.co.kr" value="hong@eternal.co.kr"/>
+
+      <label>휴대전화</label>
+      <input id="mobile" placeholder="010-1234-5678" value="010-1234-5678"/>
+
+      <label>주소</label>
+      <input id="address" placeholder="서울특별시 성동구 아차산로 17길 49, 17~20층" value="서울특별시 성동구 아차산로 17길 49, 17~20층"/>
+
+      <details>
+        <summary>관리자 옵션 (이미지 URL)</summary>
+        <div style="margin-top:10px">
+          <label>하단 이미지 URL (https://...)</label>
+          <input id="bannerUrl" placeholder="https://example.com/banner.png"
+                 value="https://iili.io/fZ3qDyg.png"/>
+          <div class="hint">
+            Gmail 서명 이미지가 안 보이면, 이미지가 <b>공개(Anyone with link)</b>로 접근 가능한지 확인하세요.
+          </div>
+        </div>
+      </details>
+
+      <div class="btns">
+        <button id="copyRich">서명 복사(서식 유지)</button>
+        <button class="secondary" id="copyHtml">HTML 코드 복사</button>
+        <button class="secondary" id="reset">예시값으로 초기화</button>
+      </div>
+
+      <div class="hint">
+        <b>붙여넣기 경로</b>:
+        Gmail → 설정(⚙) → <b>모든 설정 보기</b> → 일반 → <b>서명</b> → 새로 만들기 →
+        서명 편집 박스에 <b>서명 복사(서식 유지)</b> 후 붙여넣기
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>미리보기 / 복사용 원본</h2>
+    <div class="previewWrap">
+      <div class="previewBox">
+        <div id="signaturePreview" aria-label="signature preview"></div>
+      </div>
+
+      <div class="mono">
+        <pre id="signatureHtml"></pre>
+      </div>
+
+      <div class="hint">
+        복사-붙여넣기 시 서식이 깨질 때는 <b>Chrome</b>에서 시도하고, Grammarly/확장프로그램을 잠시 꺼보세요.
+        또한 Gmail 작성창에서 <b>일반 텍스트 모드(Plain text mode)</b>가 켜져 있으면 이미지/서식이 사라집니다.
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast">복사했어요</div>
+
+<script>
+  // Gmail 서명 호환성 우선: table 기반 + 인라인 스타일(클래스/외부 CSS 의존 X)
+  function esc(s){ return (s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function normalizePhone(s){ return (s||"").trim(); }
+
+  function buildSignatureHTML(data){
+    const name  = esc(data.name).trim();
+    const team  = esc(data.team).trim();
+    const title = esc(data.title).trim();
+    const email = esc(data.email).trim();
+    const mobile= esc(normalizePhone(data.mobile));
+    const address = esc(data.address).trim();
+    const bannerUrl = (data.bannerUrl||"").trim();
+
+    // 숫자/하이픈 외 문자를 제거하지 않는 이유: 국제번호(+82) 등 케이스 보존
+    const safeEmailHref = "mailto:" + email;
+    const safeTelHref   = "tel:" + mobile.replace(/\s/g,"");
+
+    const font = "font-family:Arial,Helvetica,sans-serif";
+
+    // 여백은 margin 대신 table cell padding/line-height 위주 (Gmail이 margin을 다루는 방식이 일관적이지 않음)
+    let html = '';
+    html += '<table cellpadding="0" cellspacing="0" border="0" style="'+font+'; border-collapse:collapse;">';
+    html +=   '<tr>';
+    html +=     '<td style="'+font+'; padding:0; vertical-align:top;">';
+    html +=       '<div style="'+font+'; font-size:14px; line-height:20px; color:#111111; font-weight:700;">'+ (name || '&nbsp;') +'</div>';
+    html +=       '<div style="'+font+'; font-size:12px; line-height:18px; color:#555555;">';
+    html +=         (team ? team : '&nbsp;') + (title ? ' · ' + title : '');
+    html +=       '</div>';
+    html +=       '<div style="'+font+'; font-size:12px; line-height:18px; color:#111111; padding-top:6px;">';
+    html +=         '<span style="'+font+'; color:#555555;">E.</span> <a href="'+safeEmailHref+'" style="'+font+'; color:#1155cc; text-decoration:none;">'+email+'</a><br/>';
+    html +=         '<span style="'+font+'; color:#555555;">M.</span> <a href="'+safeTelHref+'" style="'+font+'; color:#1155cc; text-decoration:none;">'+mobile+'</a><br/>';
+    html +=         '<span style="'+font+'; color:#555555;">A.</span> <span style="'+font+'; color:#111111;">'+address+'</span>';
+    html +=       '</div>';
+    html +=     '</td>';
+    html +=   '</tr>';
+    html += '</table>';
+
+    // 배너/이미지는 표 아래에 두고, width/height 명시 + display:block + border=0 (서명/메일 클라이언트 호환성)
+    if (bannerUrl){
+      html += '<table cellpadding="0" cellspacing="0" border="0" style="'+font+'; border-collapse:collapse; margin-top:8px;">';
+      html +=   '<tr><td style="'+font+'; padding-top:10px;">';
+      html +=     '<img src="'+esc(bannerUrl)+'" alt="" style="display:block; border:0; outline:none; text-decoration:none; max-width:240px; height:auto;" />';
+      html +=   '</td></tr>';
+      html += '</table>';
+    }
+
+    // Gmail 서명에서 가끔 줄바꿈이 먹지 않는 케이스 방지용 (끝 공백)
+    html += '<div style="line-height:0; font-size:0;">&nbsp;</div>';
+    return html;
+  }
+
+  function getData(){
+    return {
+      name: document.getElementById('name').value,
+      team: document.getElementById('team').value,
+      title: document.getElementById('title').value,
+      email: document.getElementById('email').value,
+      mobile: document.getElementById('mobile').value,
+      address: document.getElementById('address').value,
+      bannerUrl: document.getElementById('bannerUrl').value
+    };
+  }
+
+  function render(){
+    const html = buildSignatureHTML(getData());
+    const preview = document.getElementById('signaturePreview');
+    preview.innerHTML = html;
+    document.getElementById('signatureHtml').textContent = html;
+  }
+
+  function toast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('on');
+    setTimeout(()=>t.classList.remove('on'), 1100);
+  }
+
+  async function copyRich(){
+    const html = buildSignatureHTML(getData());
+    const text = document.getElementById('signaturePreview').innerText;
+
+    // Clipboard API로 text/html 우선 (지원 안 되면 execCommand 폴백)
+    try{
+      if (navigator.clipboard && window.ClipboardItem){
+        const blobHtml = new Blob([html], {type: 'text/html'});
+        const blobText = new Blob([text], {type: 'text/plain'});
+        const item = new ClipboardItem({'text/html': blobHtml, 'text/plain': blobText});
+        await navigator.clipboard.write([item]);
+        toast('서명을 복사했어요 (서식 유지)');
+        return;
+      }
+    }catch(e){ /* ignore and fallback */ }
+
+    // Fallback: DOM 선택 후 복사 (브라우저 호환)
+    const container = document.createElement('div');
+    container.style.position = 'fixed';
+    container.style.left = '-9999px';
+    container.innerHTML = html;
+    document.body.appendChild(container);
+
+    const range = document.createRange();
+    range.selectNodeContents(container);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    document.execCommand('copy');
+    sel.removeAllRanges();
+    document.body.removeChild(container);
+    toast('서명을 복사했어요');
+  }
+
+  async function copyHtml(){
+    const html = buildSignatureHTML(getData());
+    try{
+      await navigator.clipboard.writeText(html);
+      toast('HTML 코드를 복사했어요');
+    }catch(e){
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = html;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      toast('HTML 코드를 복사했어요');
+    }
+  }
+
+  function resetExample(){
+    document.getElementById('name').value = '홍길동';
+    document.getElementById('team').value = '조직문화팀';
+    document.getElementById('title').value = '사원';
+    document.getElementById('email').value = 'hong@eternal.co.kr';
+    document.getElementById('mobile').value = '010-1234-5678';
+    document.getElementById('address').value = '서울특별시 성동구 아차산로 17길 49, 17~20층';
+    document.getElementById('bannerUrl').value = 'https://iili.io/fZ3qDyg.png';
+    render();
+  }
+
+  // events
+  ['name','team','title','email','mobile','address','bannerUrl'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', render);
+  });
+  document.getElementById('copyRich').addEventListener('click', copyRich);
+  document.getElementById('copyHtml').addEventListener('click', copyHtml);
+  document.getElementById('reset').addEventListener('click', resetExample);
+
+  render();
+</script>
+</body>
+</html>
